@@ -8,6 +8,8 @@ The change in `code/AssetLib/MMD/MMDImporter.cpp` carries existing PMX material 
 - flag `0x10`: `$mat.mmd.edgeEnabled` (integer)
 - edge size: `$mat.mmd.edgeSize` (float)
 - edge RGBA: `$mat.mmd.edgeColor` (`aiColor4D`)
+- supported sphere mode: `$mat.mmd.sphereMode`; texture path: `aiTextureType_REFLECTION`
+- custom toon texture path: `$tex.mmd.toonPath` (`aiString`); built-in shared toon indices are not file paths
 
 The existing PMX parser, geometry conversion, and other importers are unchanged. The upstream BSD license applies. User models and reference media are not included.
 

@@ -456,6 +456,10 @@ aiMaterial *MMDImporter::CreateMaterial(const pmx::PmxMaterial *pMat,
         const int sphereMode = pMat->sphere_op_mode;
         mat->AddProperty(&sphereMode, 1, "$mat.mmd.sphereMode", 0, 0);
     }
+    if (pMat->common_toon_flag == 0 && pMat->toon_texture_index >= 0 && pMat->toon_texture_index < pModel->texture_count) {
+        const aiString toonPath(pModel->textures[pMat->toon_texture_index]);
+        mat->AddProperty(&toonPath, "$tex.mmd.toonPath", 0, 0);
+    }
 
     int mapping_uvwsrc = 0;
     mat->AddProperty(&mapping_uvwsrc, 1,
