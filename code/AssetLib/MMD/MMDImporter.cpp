@@ -448,6 +448,15 @@ aiMaterial *MMDImporter::CreateMaterial(const pmx::PmxMaterial *pMat,
         mat->AddProperty(&texture_path, AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0));
     }
 
+    // PMX sphere maps are authored view-space reflections; mode 3 uses extra UVs.
+    if (pMat->sphere_texture_index >= 0 && pMat->sphere_texture_index < pModel->texture_count &&
+            (pMat->sphere_op_mode == 1 || pMat->sphere_op_mode == 2)) {
+        aiString spherePath(pModel->textures[pMat->sphere_texture_index]);
+        mat->AddProperty(&spherePath, AI_MATKEY_TEXTURE(aiTextureType_REFLECTION, 0));
+        const int sphereMode = pMat->sphere_op_mode;
+        mat->AddProperty(&sphereMode, 1, "$mat.mmd.sphereMode", 0, 0);
+    }
+
     int mapping_uvwsrc = 0;
     mat->AddProperty(&mapping_uvwsrc, 1,
             AI_MATKEY_UVWSRC(aiTextureType_DIFFUSE, 0));
