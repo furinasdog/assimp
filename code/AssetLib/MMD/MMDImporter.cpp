@@ -433,6 +433,13 @@ aiMaterial *MMDImporter::CreateMaterial(const pmx::PmxMaterial *pMat,
 
     float opacity = pMat->diffuse[3];
     mat->AddProperty(&opacity, 1, AI_MATKEY_OPACITY);
+    const int twoSided = (pMat->flag & 0x01) != 0;
+    mat->AddProperty(&twoSided, 1, AI_MATKEY_TWOSIDED);
+    const int edgeEnabled = (pMat->flag & 0x10) != 0;
+    mat->AddProperty(&edgeEnabled, 1, "$mat.mmd.edgeEnabled", 0, 0);
+    mat->AddProperty(&pMat->edge_size, 1, "$mat.mmd.edgeSize", 0, 0);
+    const aiColor4D edgeColor(pMat->edge_color[0], pMat->edge_color[1], pMat->edge_color[2], pMat->edge_color[3]);
+    mat->AddProperty(&edgeColor, 1, "$mat.mmd.edgeColor", 0, 0);
     float shininess = pMat->specularlity;
     mat->AddProperty(&shininess, 1, AI_MATKEY_SHININESS_STRENGTH);
 
