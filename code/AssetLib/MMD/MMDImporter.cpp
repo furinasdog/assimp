@@ -52,6 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/CreateAnimMesh.h>
+#include <assimp/vrm/vrmmeta.h>
 
 
 #include <streambuf>
@@ -296,6 +297,58 @@ void MMDImporter::CreateDataFromImport(const pmx::PmxModel *pModel,
 
     FlipWindingOrderProcess windingFlipper;
     windingFlipper.Execute(pScene);
+
+    // Keep PMX physics in the scene metadata. VRM4U's existing runtime
+    // converter consumes this metadata and creates the engine PhysicsAsset.
+    if (pModel->rigid_body_count > 0 || pModel->joint_count > 0) {
+        auto *meta = new VRM::VRMMetadata();
+        meta->pmxRigidBodyNum = pModel->rigid_body_count;
+        meta->pmxRigidBodies = new VRM::VRMPmxRigidBody[meta->pmxRigidBodyNum];
+        for (int i = 0; i < meta->pmxRigidBodyNum; ++i) {
+            const auto &src = pModel->rigid_bodies[i];
+            auto &dst = meta->pmxRigidBodies[i];
+            dst.name = src.girid_body_name;
+            dst.group = src.group;
+            dst.mask = src.mask;
+            dst.shape = src.shape;
+            dst.boneIndex = src.target_bone;
+            if (src.target_bone >= 0 && src.target_bone < pModel->bone_count) {
+                dst.boneName = pModel->bones[src.target_bone].bone_name;
+            }
+            for (int axis = 0; axis < 3; ++axis) {
+                dst.size[axis] = src.size[axis];
+                dst.position[axis] = src.position[axis];
+                dst.orientation[axis] = src.orientation[axis];
+            }
+            dst.mass = src.mass;
+            dst.moveAttenuation = src.move_attenuation;
+            dst.rotationAttenuation = src.rotation_attenuation;
+            dst.repulsion = src.repulsion;
+            dst.friction = src.friction;
+            dst.physicsCalcType = src.physics_calc_type;
+        }
+        meta->pmxJointNum = pModel->joint_count;
+        meta->pmxJoints = new VRM::VRMPmxJoint[meta->pmxJointNum];
+        for (int i = 0; i < meta->pmxJointNum; ++i) {
+            const auto &src = pModel->joints[i];
+            auto &dst = meta->pmxJoints[i];
+            dst.name = src.joint_name;
+            dst.type = static_cast<unsigned char>(src.joint_type);
+            dst.rigidBody1 = src.param.rigid_body1;
+            dst.rigidBody2 = src.param.rigid_body2;
+            for (int axis = 0; axis < 3; ++axis) {
+                dst.position[axis] = src.param.position[axis];
+                dst.orientation[axis] = src.param.orientaiton[axis];
+                dst.moveMin[axis] = src.param.move_limitation_min[axis];
+                dst.moveMax[axis] = src.param.move_limitation_max[axis];
+                dst.rotationMin[axis] = src.param.rotation_limitation_min[axis];
+                dst.rotationMax[axis] = src.param.rotation_limitation_max[axis];
+                dst.springMove[axis] = src.param.spring_move_coefficient[axis];
+                dst.springRotation[axis] = src.param.spring_rotation_coefficient[axis];
+            }
+        }
+        pScene->mVRMMeta = meta;
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
