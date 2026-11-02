@@ -300,8 +300,22 @@ void MMDImporter::CreateDataFromImport(const pmx::PmxModel *pModel,
 
     // Keep PMX physics in the scene metadata. VRM4U's existing runtime
     // converter consumes this metadata and creates the engine PhysicsAsset.
-    if (pModel->rigid_body_count > 0 || pModel->joint_count > 0) {
+    if (pModel->bone_count > 0 || pModel->rigid_body_count > 0 || pModel->joint_count > 0) {
         auto *meta = new VRM::VRMMetadata();
+        meta->pmxBoneNum = pModel->bone_count;
+        meta->pmxBones = new VRM::VRMPmxBoneTransform[meta->pmxBoneNum];
+        for (int i = 0; i < meta->pmxBoneNum; ++i) {
+            const auto &src = pModel->bones[i];
+            auto &dst = meta->pmxBones[i];
+            dst.boneName = src.bone_name;
+            dst.parentIndex = src.parent_index;
+            dst.deformLayer = src.level;
+            dst.flags = src.bone_flag;
+            if (src.bone_flag & (0x0100 | 0x0200)) {
+                dst.grantIndex = src.grant_parent_index;
+                dst.grantWeight = src.grant_weight;
+            }
+        }
         meta->pmxRigidBodyNum = pModel->rigid_body_count;
         meta->pmxRigidBodies = new VRM::VRMPmxRigidBody[meta->pmxRigidBodyNum];
         for (int i = 0; i < meta->pmxRigidBodyNum; ++i) {
